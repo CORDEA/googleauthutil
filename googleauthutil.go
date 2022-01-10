@@ -43,9 +43,13 @@ func restoreToken(path string) (*oauth2.Token, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer func(f *os.File) {
+		if e := f.Close(); err != nil {
+			err = e
+		}
+	}(f)
 	t := &oauth2.Token{}
 	err = json.NewDecoder(f).Decode(t)
-	defer f.Close()
 	return t, err
 }
 
@@ -54,8 +58,13 @@ func storeToken(path string, token *oauth2.Token) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
-	return json.NewEncoder(f).Encode(token)
+	defer func(f *os.File) {
+		if e := f.Close(); err != nil {
+			err = e
+		}
+	}(f)
+	err = json.NewEncoder(f).Encode(token)
+	return err
 }
 
 func generateState() string {
